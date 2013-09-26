@@ -22,8 +22,8 @@ extern LPSTR GetPlainClassName(IN LPSTR pszMangled, OUT LPSTR pszOutput);
 #define ICON_NAMED   35
 #define ICON_UNKNOWN 121
 
-extern void AddTableEntry(int iIcon, ea_t eaVftable, UINT uMethodCount, LPCTSTR lpszFormat, ...);
-extern void SetUnknown(ea_t ea, size_t size);
+extern void AddTableEntry(int iIcon, ea_t eaVftable, asize_t uMethodCount, LPCTSTR lpszFormat, ...);
+extern void SetUnknown(ea_t ea, asize_t size);
 
 extern BOOL bAudioOnDone, bOverwriteComents, bPlaceStructs;
 

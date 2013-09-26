@@ -1,4 +1,3 @@
-
 // ****************************************************************************
 // File: RTCI.cpp
 // Desc: MFC Run Time Class Information
@@ -8,32 +7,8 @@
 #include "Core.h"
 #include "RTCI.h"
 #include "Vftable.h"
+#include "struct_macros.h"
 
-// Get or create an IDA struct
-#define ADD_STRUCT(ID, NAME, COMMENT)\
-{\
-	ptStruct = NULL;\
-	ID = get_struc_id(NAME);\
-	if(ID == BADADDR)\
-		ID = add_struc(BADADDR, NAME);\
-	if(ID != BADADDR)\
-		ptStruct = get_struc(ID);\
-	if(ptStruct)\
-	{\
-		del_struc_members(ptStruct, 0, MAXADDR);\
-		set_struc_cmt(ID, COMMENT, true);\
-	}\
-	else\
-	msg(" ** \"" NAME "\" create failed! **\n");\
-}
-
-// Add structure member macro
-#define ADD_MEMBER(pSTRUCT, FLAG, MT, TYPE, MEMBER)\
-{\
-	TYPE _tTYPE;\
-	if(add_struc_member(pSTRUCT, #MEMBER, offsetof(TYPE, MEMBER), FLAG, MT, sizeof(_tTYPE.MEMBER)) != 0)\
-		msg(" ** ADD_MEMBER(): %s failed! %d, %d **\n", #MEMBER, offsetof(TYPE, MEMBER), sizeof(_tTYPE.MEMBER));\
-}
 
 // Base class hierarchy list
 struct tBCInfo : public Container::NodeEx<Container::ListHT, tBCInfo>

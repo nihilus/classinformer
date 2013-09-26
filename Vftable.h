@@ -13,7 +13,7 @@ namespace VFTABLE
 	{
 		ea_t eaStart;
 		ea_t eaEnd;
-		UINT uMethods;
+		asize_t uMethods;
 		char szName[MAXSTR];
 	};
 

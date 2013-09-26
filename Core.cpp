@@ -34,10 +34,10 @@ enum NETINDX
 struct TBLENTRY
 { 
     ea_t  eaVftable;	
-	WORD  wMethodCount;
+	asize_t  astMethodCount;
     short sIcon;
     WORD  wTextSize;    
-	char  szName[MAXSPECSIZE - (sizeof(ea_t) + sizeof(WORD) + (sizeof(WORD) * 2))]; // IDA MAXSTR = 1024
+	char  szName[MAXSPECSIZE - (sizeof(ea_t) + sizeof(asize_t) + sizeof(short) + sizeof(WORD))]; // IDA MAXSTR = 1024
 };
 #pragma pack(pop)
 
@@ -221,10 +221,10 @@ inline static void NewNetnodeStore()
 }
 
 inline WORD GetStoreVersion(){ return((WORD) pcNNode->altval_idx8(NIDX_VERSION, DATA_TAG)); }
-inline UINT GetTableCount(){ return(pcNNode->altval_idx8(NIDX_COUNT, DATA_TAG)); }
-inline BOOL SetTableCount(UINT uCount){ return(pcNNode->altset_idx8(NIDX_COUNT, uCount, DATA_TAG)); }
-inline BOOL GetTableEntry(TBLENTRY &rEntry, UINT uIndex){ return(pcNNode->supval(uIndex, &rEntry, sizeof(TBLENTRY), TABLE_TAG) > 0); }
-inline BOOL SetTableEntry(TBLENTRY &rEntry, UINT uIndex){ return(pcNNode->supset(uIndex, &rEntry, (offsetof(TBLENTRY, szName) + rEntry.wTextSize), TABLE_TAG)); }
+inline asize_t GetTableCount(){ return(pcNNode->altval_idx8(NIDX_COUNT, DATA_TAG)); }
+inline BOOL SetTableCount(asize_t astCount){ return(pcNNode->altset_idx8(NIDX_COUNT, astCount, DATA_TAG)); }
+inline BOOL GetTableEntry(TBLENTRY &rEntry, asize_t astIndex){ return(pcNNode->supval(astIndex, &rEntry, sizeof(TBLENTRY), TABLE_TAG) > 0); }
+inline BOOL SetTableEntry(TBLENTRY &rEntry, asize_t astIndex){ return(pcNNode->supset(astIndex, &rEntry, (offsetof(TBLENTRY, szName) + rEntry.wTextSize), TABLE_TAG)); }
 
 
 static void idaapi ForumBtnHandler(TView *fields[], int code)
@@ -232,7 +232,7 @@ static void idaapi ForumBtnHandler(TView *fields[], int code)
     cURLHelp::OpenSupportForum();
 }
 
-static UINT CALLBACK LB_OnGetLineCount(PVOID pObj){ return(GetTableCount()); }
+static UINT CALLBACK LB_OnGetLineCount(PVOID pObj){ return (UINT)min(GetTableCount(),MAXUINT_PTR); }
 static void CALLBACK LB_OnMakeLine(PVOID pObj, UINT n, char * const *ppCell)
 {	
 	if(n == 0)
@@ -245,7 +245,7 @@ static void CALLBACK LB_OnMakeLine(PVOID pObj, UINT n, char * const *ppCell)
         TBLENTRY Entry; 
         GetTableEntry(Entry, (n - 1));
 		sprintf(ppCell[0], "%08X", Entry.eaVftable);
-        sprintf(ppCell[1], "%04u", Entry.wMethodCount);
+        sprintf(ppCell[1], "%8u", Entry.astMethodCount);
         memcpy(ppCell[2], Entry.szName, Entry.wTextSize);		
 	}
 }
@@ -272,11 +272,11 @@ static void CALLBACK LB_OnSelect(PVOID pObj, UINT n)
 static void CALLBACK LB_OnClose(PVOID pObj) { FreeWorkingData(); }
 
 // Add an entry to the vftable list
-void AddTableEntry(int iIcon, ea_t eaVftable, UINT uMethodCount, LPCTSTR lpszFormat, ...)
+void AddTableEntry(int iIcon, ea_t eaVftable, asize_t astMethodCount, LPCTSTR lpszFormat, ...)
 {
     TBLENTRY Entry;          
     Entry.eaVftable     = eaVftable;    
-    Entry.wMethodCount  = uMethodCount;
+    Entry.astMethodCount  = astMethodCount;
     Entry.sIcon         = iIcon;
 		
     Entry.szName[SIZESTR(Entry.szName)] = 0;
@@ -286,9 +286,9 @@ void AddTableEntry(int iIcon, ea_t eaVftable, UINT uMethodCount, LPCTSTR lpszFor
 	va_end(vl);
     Entry.wTextSize = (strlen(Entry.szName) + 1);
        
-    UINT uCount = GetTableCount();
-    SetTableEntry(Entry, uCount);
-    SetTableCount(++uCount);       
+    asize_t astCount = GetTableCount();
+    SetTableEntry(Entry, astCount);
+    SetTableCount(++astCount);       
 }
 
 // Handler for choose code and data segment buttons
@@ -337,15 +337,15 @@ void CORE_Process(int iArg)
         return;
     }         
     
-    UINT uTableCount   = GetTableCount();
+    asize_t astTableCount   = GetTableCount();
     WORD wStoreVersion = GetStoreVersion();
-    BOOL bStorageExists = ((wStoreVersion == MY_VERSION) && (uTableCount > 0));
+    BOOL bStorageExists = ((wStoreVersion == MY_VERSION) && (astTableCount > 0));
    
     // Ask if we should use storage or process again
     if(bStorageExists)
         bStorageExists = (askyn_c(1, "TITLE ClassInfomer %s\nHIDECANCEL\nUse previously stored result?        ", szVersion) == 1);
     else
-    if((wStoreVersion != MY_VERSION) && (uTableCount > 0))
+    if((wStoreVersion != MY_VERSION) && (astTableCount > 0))
         Output("** Storage data version missmatch! **\n");
  	  
     if(!bStorageExists)
@@ -1371,15 +1371,15 @@ int AddStrucMember(struc_t *sptr, char *name, ea_t offset, flags_t flag, typeinf
 // Set a range of bytes as unknown since IDA API do_unknown_range() is prone to fail
 // and occasionally leads to a run on condition.
 // Note: An IDA 5.x issue, could be fixed now
-void SetUnknown(ea_t ea, size_t size)
+void SetUnknown(ea_t ea, asize_t size)
 {
 // 1.05 causes more problems then it fixes
 // The do_unknown() size overrun problem overwrites some changes
-/*	
+	
 	ea_t Ptr = ea; 
-	ea_t End = (ea + (ea_t) size);
+	ea_t End = (ea + size);
 	while(Ptr < End) do_unknown(Ptr++, DOUNK_SIMPLE);
 	
 	//auto_mark_range(ea, End, AU_UNK);
-*/
+
 }

@@ -150,7 +150,6 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 			}
 
 		
-			#if 0
 			// Note: Not 100% accurate since the index could point to code, but not dissembled correctly					
 			// Value should be code and a function start
 			Output("   %08X hasValue: %d, isCode: %d, isFunc: %d, * %08X\n", eaIndexValue, hasValue(Flags), isCode(Flags), isFunc(Flags), get_32bit(eaIndexValue));
@@ -159,12 +158,11 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 				Output(" ******* 4\n");
 				break;	
 			}
-			#endif
 		
-			eaAddress += sizeof(UINT);
+			eaAddress += sizeof(PVOID);
 		};
 			
-		if((rtInfo.uMethods = ((eaAddress - eaStart) / sizeof(UINT))) > 0)
+		if((rtInfo.uMethods = ((eaAddress - eaStart) / sizeof(PVOID))) > 0)
 		{
 			rtInfo.eaEnd = eaAddress;
 			//Output(" vftable: %08X-%08X, methods: %d\n", rtInfo.eaStart, rtInfo.eaEnd, rtInfo.uMethods);				

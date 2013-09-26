@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Support">
+      <UniqueIdentifier>{b5b5919e-f425-4eb7-b839-8edf89d17829}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support\Custom UI">
+      <UniqueIdentifier>{338f7f00-8704-494b-b6d7-ebad90f739cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{d724c6f2-404f-4a65-be3b-0d1405bb2767}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="Doc">
+      <UniqueIdentifier>{a0514f33-e91f-4eb9-9fcc-d92b68d8ffca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ContainersInl.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomUI\HelpURL.h">
+      <Filter>Support\Custom UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomUI\IDACustomCommon.h">
+      <Filter>Support\Custom UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomUI\SegmentSelectBox.h">
+      <Filter>Support\Custom UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomUI\WaitBoxEx.h">
+      <Filter>Support\Custom UI</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h" />
+    <ClInclude Include="RTCI.h" />
+    <ClInclude Include="RTTI.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="Vftable.h" />
+    <ClInclude Include="struct_macros.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Utility.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomUI\SegmentSelectBox.cpp">
+      <Filter>Support\Custom UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="RTCI.cpp" />
+    <ClCompile Include="RTTI.cpp" />
+    <ClCompile Include="Vftable.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\done1.wav">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="Class_Informer.txt">
+      <Filter>Doc</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="IDA_ClassInformer_PlugIn.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
