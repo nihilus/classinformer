@@ -1,4 +1,4 @@
 classinformer
 =============
 
-https://sourceforge.net/projects/classinformer/ partially adapterd for ida64
+https://sourceforge.net/projects/classinformer/ partially adapted for ida64
