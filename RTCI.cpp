@@ -75,7 +75,7 @@ BOOL RTCI::IsValid(ea_t eaVftable)
 			CRuntimeClass *ptRTCI;
 			if(GetVerify32_t(eaFirstMethod+1, ptRTCI))
 			{	
-				//Output(" P: %08X\n", ptRTCI);
+				Output(" P: "FMT_EA_X"\n", ptRTCI);
 
 				// First field should be a pointer to the name string
 				LPCTSTR lpszName;
@@ -87,12 +87,12 @@ BOOL RTCI::IsValid(ea_t eaVftable)
 						szName[0] = szName[MAXSTR-1] = 0;
 						if(CRuntimeClass::GetName(ptRTCI, szName, SIZESTR(szName)))
 						{
-							//Output(" Name: \"%s\"\n", szName);
+							Output(" Name: \"%s\"\n", szName);
 
 							UINT uFlag;
 							if(GetVerify32_t((ea_t) &ptRTCI->m_wSchema, uFlag))
 							{
-								//Output("  Flag: %08X\n", uFlag);
+								Output("  Flag: "FMT_EA_X"\n", uFlag);
 								return(uFlag == 0xFFFF);
 							}
 						}
@@ -176,7 +176,7 @@ void RTCI::CRuntimeClass::DoStruct(CRuntimeClass *ptRTCI)
 			
 			if(!set_name((ea_t) ptRTCI, szStructName, (SN_NON_AUTO | SN_NOWARN)))
 			{	
-			//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) ptRTCI, szStructName);
+			//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) ptRTCI, szStructName);
 				// If it fails use the first sequence that works
 				for(int i = 0; i < 1000000; i++)
 				{				
@@ -200,13 +200,13 @@ void RTCI::CRuntimeClass::DoStruct(CRuntimeClass *ptRTCI)
 				flags_t Flags = getFlags(eaCtor);
 				if(!has_name(Flags) || has_dummy_name(Flags))
 				{
-					//Output("%08X CTOR\n", eaCtor);
+					Output(FMT_EA_X" CTOR\n", eaCtor);
 					char szCtor[MAXSTR];
 					szCtor[0] = szCtor[MAXSTR-1] = 0;
 					qsnprintf(szCtor, (MAXSTR-1), "??0%s@@QAE@XZ", szName);
 					if(!set_name(eaCtor, szCtor, (SN_NON_AUTO | SN_NOWARN)))
 					{
-					//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaCtor, szCtor);
+					//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaCtor, szCtor);
 						// If it fails use the first sequence that works
 						for(int i = 0; i < 1000000; i++)
 						{				
@@ -287,7 +287,7 @@ void RTCI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 			{				
 				if(!set_name(eaVftable, szNewName, (SN_NON_AUTO | SN_NOWARN)))
 				{	
-				//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szNewName);
+				//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szNewName);
 					// If it fails use the first sequence that works
 					for(int i = 0; i < 1000000; i++)
 					{						
@@ -316,7 +316,7 @@ void RTCI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 				
 				if(!set_name(eaFirstMethod, szMethodName, (SN_NON_AUTO | SN_NOWARN)))
 				{
-				//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaFirstMethod, szMethodName);
+				//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaFirstMethod, szMethodName);
 					// If it fails use the first sequence that works					
 					for(int i = 0; i < 1000000; i++)
 					{	

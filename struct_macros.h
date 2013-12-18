@@ -22,3 +22,5 @@
 	if(add_struc_member(pSTRUCT, #MEMBER, offsetof(TYPE, MEMBER), FLAG, MT, sizeof(((TYPE*)0)->MEMBER)) != 0)\
 		msg(" ** ADD_MEMBER(): %s failed! %d, %d **\n", #MEMBER, offsetof(TYPE, MEMBER), sizeof(((TYPE*)0)->MEMBER));\
 }
+
+//#define ARRAYSIZE(A) (sizeof(A)/sizeof(A[0]))

@@ -96,7 +96,7 @@ static LPSTR MangleNumber(UINT uNumber, LPSTR pszBuffer)
 			// ** test
 			if(iCount == 0)
 				msg(" *** MangleNumber overflow! ***");
-			//Output("    MN Digits: %d\n", iCount);
+			Output("    MN Digits: %d\n", iCount);
 
 			qsnprintf(pszBuffer, 16, "%s%s@", (sign ? "?" : ""), szBuffer2);
 			return(pszBuffer);
@@ -239,7 +239,7 @@ static BOOL doStructEx(ea_t ea, tid_t tid, LPSTR pszName = NULL)
 			
 				if(isStruct(getFlags(ea)))				
 				{
-					//msg("%08X %08X FIXED.\n", ea, eaPrev);
+					//msg(FMT_EA_X" "FMT_EA_X" FIXED.\n", ea, eaPrev);
 					bResult = TRUE;
 				}				
 			}
@@ -391,7 +391,7 @@ BOOL RTTI::type_info::DoStruct(type_info *pTypeInfo)
 				}
 			}
 			//else			
-			//	msg(" %08X *** type_info::DoStruct() failed! ***\n", pTypeInfo);							
+			//	msg(" "FMT_EA_X" *** type_info::DoStruct() failed! ***\n", pTypeInfo);							
 		}		
 	}
 
@@ -477,7 +477,7 @@ BOOL RTTI::BaseClassDescriptor::DoStruct(BaseClassDescriptor *pBCD, OUT LPSTR ps
 			
 			if(!set_name((ea_t) pBCD, szBuffer1, (SN_NON_AUTO | SN_NOWARN)))
 			{
-			//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) pBCD, szBuffer1);
+			//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) pBCD, szBuffer1);
 				// If it fails use the first sequence that works					
 				for(int i = 0; i < 1000000; i++)
 				{	
@@ -560,7 +560,7 @@ BOOL RTTI::ClassHierarchyDescriptor::DoStruct(ClassHierarchyDescriptor *pCHD)
 							qsnprintf(szMangledName, (MAXSTR-1), "??_R2%s8", szBaseName);														
 							if(!set_name(eaBaseClassArray, szMangledName, (SN_NON_AUTO | SN_NOWARN)))
 							{
-							//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaBaseClassArray, szMangledName);
+							//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaBaseClassArray, szMangledName);
 								// If it fails use the first sequence that works					
 								for(int i = 0; i < 1000000; i++)
 								{	
@@ -592,7 +592,7 @@ BOOL RTTI::ClassHierarchyDescriptor::DoStruct(ClassHierarchyDescriptor *pCHD)
 							
 							if(!set_name((ea_t) pCHD, szMangledName, (SN_NON_AUTO | SN_NOWARN)))
 							{
-							//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) pCHD, szMangledName);
+							//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) pCHD, szMangledName);
 								// If it fails use the first sequence that works					
 								for(int i = 0; i < 1000000; i++)
 								{	
@@ -680,8 +680,8 @@ void RTTI::GetBCDInfo(CompleteObjectLocator *pCOL, BCDInfoList &rtNameList, UINT
 					if(tBCDInfo *pNode = new tBCDInfo(szBuffer1, attributes, mdisp, pdisp, vdisp))
 						rtNameList.InsertHead(*pNode);
 
-					//Output("   BN: [%d] \"%s\", ATB: %04X\n", i, szBuffer1, get_32bit((ea_t) &pBCD->attributes));																
-					//Output("       mdisp: %d, pdisp: %d, vdisp: %d, attributes: %04X\n", *((PINT) &mdisp), *((PINT) &pdisp), *((PINT) &vdisp), attributes);					
+					Output("   BN: [%d] \"%s\", ATB: %04X\n", i, szBuffer1, get_32bit((ea_t) &pBCD->attributes));																
+					Output("       mdisp: %d, pdisp: %d, vdisp: %d, attributes: %04X\n", *((PINT) &mdisp), *((PINT) &pdisp), *((PINT) &vdisp), attributes);					
 				}
 			}
 		}
@@ -702,7 +702,7 @@ void RTTI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 	char szRawTypeName[MAXSTR];
 	type_info::GetName(pTypeInfo, szRawTypeName, (MAXSTR - 1));
 	szRawTypeName[MAXSTR-1] = 0;	
-	//Output("  RTN: \"%s\"\n", szRawTypeName);
+	Output("  RTN: \"%s\"\n", szRawTypeName);
 
 	// Iterate RTTI and place structures et al	
 	FixDWORD(eaVftable - 4);	
@@ -734,15 +734,15 @@ void RTTI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 		// 'Name', 'A::Name', etc.
 		char szPlainName[MAXSTR];
 		GetPlainClassName(szNewName, szPlainName);		
-		//Output("    NM: \"%s\", PN: \"%s\"\n", szNewName, szPlainName);		
+		Output("    NM: \"%s\", PN: \"%s\"\n", szNewName, szPlainName);		
 	
 		// Set the vftable name, if it's not named already
 		if(has_dummy_name(getFlags(eaVftable)))
 		{			
 			if(!set_name(eaVftable, szNewName, (SN_NON_AUTO | SN_NOWARN)))
 			{
-			//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szNewName);
-				//msg(" %08X ** Vftable name set failed, a duplicate? 1: \"%s\",  \"%s\" **\n", eaVftable, szNewName, szPlainName);
+			//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szNewName);
+				//msg(" "FMT_EA_X" ** Vftable name set failed, a duplicate? 1: \"%s\",  \"%s\" **\n", eaVftable, szNewName, szPlainName);
 
 				// If it fails use the first sequence that works					
 				for(int i = 0; i < 1000000; i++)
@@ -760,7 +760,7 @@ void RTTI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 		qsnprintf(szNewName, (MAXSTR-1), "??_R4%s6B@", szRawTypeName+SIZESTR(".?Ax")); szNewName[MAXSTR-1] = 0;		
 		if(!set_name((ea_t) pCOL, szNewName, (SN_NON_AUTO | SN_NOWARN)))
 		{
-		//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) pCOL, szNewName);
+		//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) pCOL, szNewName);
 			// If it fails use the first sequence that works					
 			for(int i = 0; i < 1000000; i++)
 			{	
@@ -844,7 +844,7 @@ void RTTI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 			// If not found, use the first base class instead
 			if(pMyNode == NULL)
 			{
-				//msg("%08X ** RTTI: MI/VI hierarchy level not found, using first base **\n", eaVftable);
+				//msg(FMT_EA_X" ** RTTI: MI/VI hierarchy level not found, using first base **\n", eaVftable);
 
 				if(tBCDInfo *pNode = tBCDInfoList.GetTail())
 				{				
@@ -877,15 +877,15 @@ void RTTI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 			// Simple format
 			char szPlainName[MAXSTR];
 			GetPlainClassName(szTempName, szPlainName);		
-			//Output("    NM: \"%s\", PN: \"%s\"\n", szTempName, szPlainName);		
+			Output("    NM: \"%s\", PN: \"%s\"\n", szTempName, szPlainName);		
 
 			// Set the vftable name, if it's not named already
 			if(has_dummy_name(getFlags(eaVftable)))
 			{							
 				if(!set_name(eaVftable, szTempName, (SN_NON_AUTO | SN_NOWARN)))
 				{
-				//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szTempName);
-					//msg(" %08X ** Vftable name set failed, a duplicate? 2: \"%s\",  \"%s\" **\n", eaVftable, szTempName, szPlainName);
+				//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szTempName);
+					//msg(" "FMT_EA_X" ** Vftable name set failed, a duplicate? 2: \"%s\",  \"%s\" **\n", eaVftable, szTempName, szPlainName);
 
 					// If it fails use the first sequence that works					
 					for(int i = 0; i < 1000000; i++)
@@ -985,13 +985,13 @@ void RTTI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 		// Couldn't get name, use just use COL type name
 		if(pMyNode == NULL)
 		{
-			msg("%08X ** RTTI: Multiple or virtual inheritance level not found, using COL def name **\n", eaVftable);
+			msg(FMT_EA_X" ** RTTI: Multiple or virtual inheritance level not found, using COL def name **\n", eaVftable);
 			
 			type_info *pTypeInfo = (type_info *) get_32bit((ea_t) &pCOL->pTypeDescriptor);
 			char szTopTypeNameRaw[MAXSTR];
 			type_info::GetName(pTypeInfo, szTopTypeNameRaw, (MAXSTR - 1));
 			szTopTypeNameRaw[MAXSTR-1] = 0;	
-			//Output("  RTN: \"%s\"\n", szTopTypeNameRaw);
+			Output("  RTN: \"%s\"\n", szTopTypeNameRaw);
 			
 			char szNewName[MAXSTR];
 			qsnprintf(szNewName, (MAXSTR-1), "??_7%s6B@", szTopTypeNameRaw+SIZESTR(".?Ax"));		
@@ -999,15 +999,15 @@ void RTTI::ProcessVftable(ea_t eaVftable, ea_t eaEnd)
 
 			char szPlainName[MAXSTR];
 			GetPlainClassName(szNewName, szPlainName);		
-			//Output("    NM: \"%s\", PN: \"%s\"\n", szNewName, szPlainName);
+			Output("    NM: \"%s\", PN: \"%s\"\n", szNewName, szPlainName);
 			
 			// Set the vftable name, if it's not named already
 			if(has_dummy_name(getFlags(eaVftable)))
 			{				
 				if(!set_name(eaVftable, szNewName, (SN_NON_AUTO | SN_NOWARN)))
 				{
-				//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szNewName);
-					//msg(" %08X ** Vftable name set failed, a duplicate? 3: \"%s\",  \"%s\" **\n", eaVftable, szNewName, szPlainName);
+				//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaVftable, szNewName);
+					//msg(" "FMT_EA_X" ** Vftable name set failed, a duplicate? 3: \"%s\",  \"%s\" **\n", eaVftable, szNewName, szPlainName);
 
 					// If it fails use the first sequence that works					
 					for(int i = 0; i < 1000000; i++)

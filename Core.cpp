@@ -11,6 +11,7 @@
 #include "Vftable.h"
 #include "RTTI.h"
 #include "RTCI.h"
+#include "struct_macros.h"
 #include <WaitBoxEx.h>
 #include <SegmentSelectBox.h>
 #include <HelpURL.h>
@@ -79,7 +80,7 @@ static cWaitBoxEx MyWaitBox;
 // Options
 BOOL bDebugOutput      = FALSE;
 BOOL bAudioOnDone      = TRUE;
-BOOL bFixGobalStatic   = TRUE;
+BOOL bFixGlobalStatic   = TRUE;
 BOOL bOverwriteComents = FALSE;
 BOOL bPlaceStructs	   = TRUE;
 BOOL bLogAllVFTables   = TRUE;
@@ -244,7 +245,7 @@ static void CALLBACK LB_OnMakeLine(PVOID pObj, UINT n, char * const *ppCell)
 	{
         TBLENTRY Entry; 
         GetTableEntry(Entry, (n - 1));
-		sprintf(ppCell[0], "%08X", Entry.eaVftable);
+		sprintf(ppCell[0], FMT_EA_X, Entry.eaVftable);
         sprintf(ppCell[1], "%8u", Entry.astMethodCount);
         memcpy(ppCell[2], Entry.szName, Entry.wTextSize);		
 	}
@@ -320,7 +321,7 @@ void CORE_Process(int iArg)
 	uStaticCtorDtorNSeq = 0;	   
 	bDebugOutput		= FALSE;
 	bAudioOnDone		= TRUE;
-	bFixGobalStatic		= TRUE;
+	bFixGlobalStatic		= TRUE;
 	bOverwriteComents	= FALSE;
 	bPlaceStructs		= TRUE;
 	bLogAllVFTables		= TRUE;	
@@ -361,9 +362,15 @@ void CORE_Process(int iArg)
 			    char szDesc[MAXSTR];
 			    szDesc[0] = szDesc[MAXSTR-1] = 0;
 			    get_idasgn_desc(i, szDesc, (MAXSTR-1), NULL, 0);
-			    //Output("[%d] \"%s\"\n", i, szDesc);
-			    if(strncmp(szDesc, "vc32", SIZESTR("vc32")) == 0)
-				    break;
+
+				const char* const known_sigs[] = {"vc32","vc32rtf","vc64rtf"};
+				UINT j;
+				for (j=0; j < ARRAYSIZE(known_sigs); j++)
+				{
+					if(strcmp(szDesc, known_sigs[j]) == 0)
+						break;
+				}
+				if (j < ARRAYSIZE(known_sigs)) break;
 		    }
 
 		    // Show warning, continue yes/no dialog
@@ -371,7 +378,13 @@ void CORE_Process(int iArg)
 		    {
 			    msg("* Appears not to be a MSVC target *\n");
 
-			    int iResult = askbuttons_c(NULL, NULL, NULL, 0, "TITLE Class Informer plug-in:\nHIDECANCEL\nThis DB doesn't appear to be a Microsoft compiled target I know about.\n\nThis plug-in only understands MSVC class information currently.\nRunning it on other targets, like Borland compiled, etc., will have unpredicted results.\n\n Are you really sure you want to continue anyhow?");
+			    int iResult = askbuttons_c(NULL, NULL, NULL, 0,
+						"TITLE Class Informer plug-in:\n"
+						"HIDECANCEL\n"
+						"This DB doesn't appear to be a Microsoft compiled target I know about.\n\n"
+						"This plug-in only understands MSVC class information currently.\n"
+						"Running it on other targets, like Borland compiled, etc., will have unpredictable results.\n\n"
+						"Are you really sure you want to continue anyway?");
 			    if(iResult != 1)
 			    {
 				    msg("- Aborted -\n\n");
@@ -381,14 +394,14 @@ void CORE_Process(int iArg)
 	    }			
 
 	    // Reset default options
-	    bAudioOnDone = TRUE, bOverwriteComents = FALSE, bLogAllVFTables = TRUE, bFixGobalStatic = TRUE;
+	    bAudioOnDone = TRUE, bOverwriteComents = FALSE, bLogAllVFTables = TRUE, bFixGlobalStatic = TRUE;
 	    uRTTI_VFTables = uRTCI_VFTables = uNamed_VFTables = uOther_VFTables = 0;
 
 	    // Do UI			
 	    WORD wOptionFlags = 0;            
 	    if(bDebugOutput)		wOptionFlags |= DEBUG_TRACE;		
 	    if(bAudioOnDone)		wOptionFlags |= AUDIO_NOTIFY_DONE;
-	    if(bFixGobalStatic)		wOptionFlags |= FIND_CTOR_DTOR;		
+	    if(bFixGlobalStatic)		wOptionFlags |= FIND_CTOR_DTOR;		
 	    if(bOverwriteComents)	wOptionFlags |= OVERWRITE_COMMENTS;
 	    if(bLogAllVFTables)		wOptionFlags |= REPORT_ALL_VFTABLES;
 	    if(bPlaceStructs)		wOptionFlags |= PLACE_STRUCTS;		
@@ -403,7 +416,7 @@ void CORE_Process(int iArg)
 	    }        
 	    bDebugOutput	  = ((wOptionFlags & DEBUG_TRACE) != 0);
 	    bAudioOnDone	  = ((wOptionFlags & AUDIO_NOTIFY_DONE) != 0);		
-	    bFixGobalStatic	  = ((wOptionFlags & FIND_CTOR_DTOR) != 0);
+	    bFixGlobalStatic	  = ((wOptionFlags & FIND_CTOR_DTOR) != 0);
 	    bOverwriteComents = ((wOptionFlags & OVERWRITE_COMMENTS) != 0);
 	    bLogAllVFTables	  = ((wOptionFlags & REPORT_ALL_VFTABLES) != 0);
 	    bPlaceStructs	  = ((wOptionFlags & PLACE_STRUCTS) != 0); 
@@ -458,7 +471,7 @@ void CORE_Process(int iArg)
 					    if(pCodeSeg->perm & SEGPERM_EXEC)
 						    szFlags[2] = 'E';
 
-					    msg("[%d] \"%s\" %08X-%08X %08X %s    %s\n", iIndex, szName, pCodeSeg->startEA, pCodeSeg->endEA, pCodeSeg->size(), szFlags, szClass);
+					    msg("[%d] \"%s\" %08"FMT_EA"X-%08"FMT_EA"X %08"FMT_EA"X %s    %s\n", iIndex, szName, pCodeSeg->startEA, pCodeSeg->endEA, pCodeSeg->size(), szFlags, szClass);
 				    }
 
 				    pCodeArray[iIndex].Start = (*i)->startEA;
@@ -467,19 +480,19 @@ void CORE_Process(int iArg)
 			    msg("\n");
 		    }													
 
-		    //msg("Working: .text: (%08X - %08X), .rdata: (%08X - %08X)..\n", s_pCodeSeg->startEA,s_pCodeSeg->endEA, s_pRDataSeg->startEA,s_pRDataSeg->endEA);
+		    //msg("Working: .text: ("FMT_EA_X" - "FMT_EA_X"), .rdata: ("FMT_EA_X" - "FMT_EA_X")..\n", s_pCodeSeg->startEA,s_pCodeSeg->endEA, s_pRDataSeg->startEA,s_pRDataSeg->endEA);
 		    msg("Working..\n");
 		    s_StartTime = GetTimeStamp();
 		    if(MyWaitBox.IsQtQUI())
 			    MyWaitBox.Begin("<Class Informer PlugIn> working...");
 		    else
 			    MyWaitBox.Begin("<Class Informer> working...\n\n\n<Press Pause/Break key to abort>");			
-		    if(bFixGobalStatic)
+		    if(bFixGlobalStatic)
 		    {				
 			    // Process global and static ctor sections
 			    Output(" \n");
 			    Output("Processing static/global ctor & dtor tables.\n");
-			    //Output("Could cause IDA to do substantial analysis if tables are large..\n");
+			    Output("Could cause IDA to do substantial analysis if tables are large..\n");
 			    if(ProcessStaticTables())
 			    {
 				    Output("- Aborted -\n\n");
@@ -591,7 +604,7 @@ static void SetCtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 		qsnprintf(szName, (MAXSTR-1), "aStaticCtorTableStart%02d", uStaticCtorNameSeq);
 		if(!set_name(eaTableStart, szName, (SN_NON_AUTO | SN_NOWARN)))
 		{
-		//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaTableStart, szName);
+		//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaTableStart, szName);
 
 			// If it fails use the first sequence that works					
 			for(int i = 0; i < 1000000; i++)
@@ -612,7 +625,7 @@ static void SetCtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 		qsnprintf(szName, (MAXSTR-1), "aStaticCtorTableEnd%02d", uStaticCtorNameSeq);
 		if(!set_name(eaTableEnd, szName, (SN_NON_AUTO | SN_NOWARN)))
 		{
-		//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaTableEnd, szName);
+		//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaTableEnd, szName);
 			for(int i = 0; i < 1000000; i++)
 			{	
 				char szTempName2[MAXSTR];
@@ -661,7 +674,7 @@ static void SetDtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 		qsnprintf(szName, (MAXSTR-1), "aStaticDtorTableStart%02d", uStaticDtorNameSeq);
 		if(!set_name(eaTableStart, szName, (SN_NON_AUTO | SN_NOWARN)))
 		{
-		//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaTableStart, szName);
+		//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaTableStart, szName);
 			for(int i = 0; i < 1000000; i++)
 			{	
 				char szTempName2[MAXSTR];
@@ -680,7 +693,7 @@ static void SetDtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 		qsnprintf(szName, (MAXSTR-1), "aStaticDtorTableEnd%02d", uStaticDtorNameSeq);
 		if(!set_name(eaTableEnd, szName, (SN_NON_AUTO | SN_NOWARN)))
 		{
-		//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaTableEnd, szName);
+		//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaTableEnd, szName);
 			for(int i = 0; i < 1000000; i++)
 			{	
 				char szTempName2[MAXSTR];
@@ -701,7 +714,7 @@ static void SetDtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 // "" for when we are uncertain of ctor or dtor table
 static void SetCtorDtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 {
-	msg(" SetCtorDtorTable: %08X %08X\n", eaTableStart, eaTableEnd);
+	msg(" SetCtorDtorTable: "FMT_EA_X" "FMT_EA_X"\n", eaTableStart, eaTableEnd);
 
 	// Make sure table values are all 32bit
 	ea_t eaEntry = eaTableStart;
@@ -731,7 +744,7 @@ static void SetCtorDtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 		qsnprintf(szName, (MAXSTR-1), "aStaticCtorDtorTableStart%02d", uStaticCtorDtorNSeq);
 		if(!set_name(eaTableStart, szName, (SN_NON_AUTO | SN_NOWARN)))
 		{
-		//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaTableStart, szName);
+		//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaTableStart, szName);
 			for(int i = 0; i < 1000000; i++)
 			{	
 				char szTempName2[MAXSTR];
@@ -750,7 +763,7 @@ static void SetCtorDtorTable(ea_t eaTableStart, ea_t eaTableEnd)
 		qsnprintf(szName, (MAXSTR-1), "aStaticCtorDtorTableEnd%02d", uStaticCtorDtorNSeq);
 		if(!set_name(eaTableEnd, szName, (SN_NON_AUTO | SN_NOWARN)))
 		{
-		//msg("%08X \"%s\" SETNAME FAIL.\n", (ea_t) eaTableEnd, szName);
+		//msg(FMT_EA_X" \"%s\" SETNAME FAIL.\n", (ea_t) eaTableEnd, szName);
 			for(int i = 0; i < 1000000; i++)
 			{	
 				char szTempName2[MAXSTR];
@@ -776,7 +789,7 @@ static BOOL ProcessCinit(LPCTSTR pszName)
 	ea_t eaAddress = get_name_ea(BADADDR, pszName);
 	if(eaAddress != BADADDR)
 	{
-		Output("%08X \"%s\" found.\n", eaAddress, pszName);
+		Output(FMT_EA_X" \"%s\" found.\n", eaAddress, pszName);
 
 		if(func_t *pFunc = get_func(eaAddress))
 		{			
@@ -793,7 +806,7 @@ static BOOL ProcessCinit(LPCTSTR pszName)
 					eaPosition = find_binary(eaPosition, pFunc->endEA, "BE ? ? ? ? 8B C6 BF ? ? ? ? 3B C7", 16, (SEARCH_DOWN | SEARCH_NOBRK | SEARCH_NOSHOW));
 					if(eaPosition && (eaPosition != BADADDR))
 					{
-						//Output("%08X \"__cinit()\" pattern found.\n", eaPosition);
+						Output(FMT_EA_X" \"__cinit()\" pattern found.\n", eaPosition);
 						ea_t eaTableStart = get_32bit(eaPosition + 1); // "BE ? ? ? ?"
 						ea_t eaTableEnd   = get_32bit(eaPosition + 8); // "BE ? ? ? ? 8B C6 BF"
 						if((eaTableStart > 0xFFFF) && (eaTableEnd > 0xFFFF))
@@ -801,8 +814,8 @@ static BOOL ProcessCinit(LPCTSTR pszName)
 							// Should be in the same segment
 							if(getseg(eaTableStart) == getseg(eaTableEnd))
 							{
-								msg("%08X to %08X static/global \"_cinit()\" ctor table located <click me>.\n", eaTableStart, eaTableEnd);
-								if(bDebugOutput) Trace("%08X to %08X static/global \"_cinit()\" ctor table located.\n", eaTableStart, eaTableEnd);
+								msg(FMT_EA_X" to "FMT_EA_X" static/global \"_cinit()\" ctor table located <click me>.\n", eaTableStart, eaTableEnd);
+								if(bDebugOutput) Trace(FMT_EA_X" to "FMT_EA_X" static/global \"_cinit()\" ctor table located.\n", eaTableStart, eaTableEnd);
 								SetCtorTable(eaTableStart, eaTableEnd);
 								bFound = TRUE;
 							}
@@ -822,15 +835,15 @@ static BOOL ProcessCinit(LPCTSTR pszName)
 					eaPosition = find_binary(eaPosition, pFunc->endEA, "B9 ? ? ? ? BF ? ? ? ?", 16, (SEARCH_DOWN | SEARCH_NOBRK | SEARCH_NOSHOW));
 					if(eaPosition && (eaPosition != BADADDR))
 					{
-						//Output("%08X \"__cinit()\" pattern found.\n", eaPosition);
+						Output(FMT_EA_X" \"__cinit()\" pattern found.\n", eaPosition);
 						ea_t eaTableStart = get_32bit(eaPosition + 1); // B9 ? ? ? ?
 						ea_t eaTableEnd   = get_32bit(eaPosition + 5+1); // BF ? ? ? ?
 						if((eaTableStart > 0xFFFF) && (eaTableEnd > 0xFFFF))
 						{							
 							if(getseg(eaTableStart) == getseg(eaTableEnd))
 							{
-								msg("%08X to %08X static/global \"_cinit()\" ctor table located <click me>.\n", eaTableStart, eaTableEnd);
-								if(bDebugOutput) Trace("%08X to %08X static/global \"_cinit()\" ctor table located.\n", eaTableStart, eaTableEnd);
+								msg(FMT_EA_X" to "FMT_EA_X" static/global \"_cinit()\" ctor table located <click me>.\n", eaTableStart, eaTableEnd);
+								if(bDebugOutput) Trace(FMT_EA_X" to "FMT_EA_X" static/global \"_cinit()\" ctor table located.\n", eaTableStart, eaTableEnd);
 								SetCtorTable(eaTableStart, eaTableEnd);							
 								bFound = TRUE;
 							}
@@ -842,11 +855,11 @@ static BOOL ProcessCinit(LPCTSTR pszName)
 				}while(eaPosition && (eaPosition != BADADDR));
 			}
 			else
-				//Output("%08X ** \"%s\" found, but not function entry! **\n", eaAddress, pszName);
+				Output(FMT_EA_X" ** \"%s\" found, but not function entry! **\n", eaAddress, pszName);
 				Output("   address not a function entry.\n");
 		}
 		else
-			//Output("%08X \"%s\" found, but not a function.\n", eaAddress, pszName);
+			Output(FMT_EA_X" \"%s\" found, but not a function.\n", eaAddress, pszName);
 			Output("   address not a function.\n");
 	}
 	
@@ -862,7 +875,7 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 	ea_t eaAddress = get_name_ea(BADADDR, pszName);
 	if(eaAddress != BADADDR)
 	{
-		Output("%08X \"%s\" found.\n", eaAddress, pszName);
+		Output(FMT_EA_X" \"%s\" found.\n", eaAddress, pszName);
 
 		if(func_t *pFunc = get_func(eaAddress))
 		{			
@@ -872,8 +885,8 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 				ea_t eaXRef = get_first_fcref_to(eaAddress);
 				while(eaXRef && (eaXRef != BADADDR))
 				{
-					//Output(" \n");
-					//Output("  %08X \"%s\" Xref\n", eaXRef, pszName);
+					Output(" \n");
+					Output("  "FMT_EA_X" \"%s\" Xref\n", eaXRef, pszName);
 										
 					if(isCode(getFlags(eaXRef)))
 					{
@@ -889,7 +902,7 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 						{											
 							// TODO: Use instruction flags instead of string compares?
 							LPCTSTR pszDis = GetDisasmText(eaPrevItem);
-							//Output("  %08X \"%s\", bLookEAX: %d\n", eaPrevItem, pszDis, bLookEAX);
+							Output("  "FMT_EA_X" \"%s\", bLookEAX: %d\n", eaPrevItem, pszDis, bLookEAX);
 
 							if(eaTableStart == BADADDR)
 							{
@@ -915,7 +928,7 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 									eaTableEnd = get_32bit(eaPrevItem + 1);
 								}
 							}	
-							//Output("    %08X %08X\n", eaTableStart, eaTableEnd);
+							Output("    "FMT_EA_X" "FMT_EA_X"\n", eaTableStart, eaTableEnd);
 
 							// Found both ends of table?
 							if((eaTableEnd != BADADDR) && (eaTableStart != BADADDR))
@@ -936,8 +949,8 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 										// Exit/dtor function?										
 										if(strstr(szFuncName, "exit"))
 										{
-											msg("%08X to %08X static/global DTOR table located <click me>.\n", eaTableStart, eaTableEnd);
-											if(bDebugOutput) Trace("%08X to %08X static/global dtor table located.\n", eaTableStart, eaTableEnd);											
+											msg(FMT_EA_X" to "FMT_EA_X" static/global DTOR table located <click me>.\n", eaTableStart, eaTableEnd);
+											if(bDebugOutput) Trace(FMT_EA_X" to "FMT_EA_X" static/global dtor table located.\n", eaTableStart, eaTableEnd);											
 											SetDtorTable(eaTableStart, eaTableEnd);
 											bFound = TRUE;
 											break;
@@ -946,8 +959,8 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 										// Start/ctor?
 										if(strstr(szFuncName, "start") || strstr(szFuncName, "cinit"))
 										{
-											msg("%08X to %08X static/global CTOR table located <click me>.\n", eaTableStart, eaTableEnd);
-											if(bDebugOutput) Trace("%08X to %08X static/global CTOR table located.\n", eaTableStart, eaTableEnd);
+											msg(FMT_EA_X" to "FMT_EA_X" static/global CTOR table located <click me>.\n", eaTableStart, eaTableEnd);
+											if(bDebugOutput) Trace(FMT_EA_X" to "FMT_EA_X" static/global CTOR table located.\n", eaTableStart, eaTableEnd);
 											SetCtorTable(eaTableStart, eaTableEnd);
 											bFound = TRUE;
 											break;
@@ -955,16 +968,16 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 									}
 									
 									// Fall back to a generic assumption
-									msg("%08X to %08X static/global CTOR/DTOR table located <click me>.\n", eaTableStart, eaTableEnd);
-									if(bDebugOutput) Trace("%08X to %08X static/global CTOR/DTOR table located.\n", eaTableStart, eaTableEnd);
+									msg(FMT_EA_X" to "FMT_EA_X" static/global CTOR/DTOR table located <click me>.\n", eaTableStart, eaTableEnd);
+									if(bDebugOutput) Trace(FMT_EA_X" to "FMT_EA_X" static/global CTOR/DTOR table located.\n", eaTableStart, eaTableEnd);
 									SetCtorDtorTable(eaTableStart, eaTableEnd);
 									bFound = TRUE;
 									break;																									
 								}
 								else
 								{
-									msg("%08X ** Bad address range of %08X, %08X for \"%s\" type ** <click me>.\n", eaXRef, eaTableStart, eaTableEnd, pszName);
-									if(bDebugOutput) Trace("%08X ** Bad address range of %08X, %08X for \"%s\" type **\n", eaXRef, eaTableStart, eaTableEnd, pszName);
+									msg(FMT_EA_X" ** Bad address range of "FMT_EA_X", "FMT_EA_X" for \"%s\" type ** <click me>.\n", eaXRef, eaTableStart, eaTableEnd, pszName);
+									if(bDebugOutput) Trace(FMT_EA_X" ** Bad address range of "FMT_EA_X", "FMT_EA_X" for \"%s\" type **\n", eaXRef, eaTableStart, eaTableEnd, pszName);
 									break;
 								}
 							}
@@ -973,17 +986,17 @@ static BOOL ProcessInitterm(LPCTSTR pszName)
 						};					
 					}			
 					else					
-						Output("  %08X ** \"%s\" xref is not code! **\n", eaXRef, pszName);								
+						Output("  "FMT_EA_X" ** \"%s\" xref is not code! **\n", eaXRef, pszName);								
 					
 					eaXRef = get_next_fcref_to(eaAddress, eaXRef);
 				};			
 			}
 			else
-				//Output("%08X ** \"%s\" found, but not function entry! **\n", eaAddress, pszName);
+				Output(FMT_EA_X" ** \"%s\" found, but not function entry! **\n", eaAddress, pszName);
 				Output("   address not a function entry.\n");
 		}	
 		else
-			//Output("%08X \"%s\" type found, but not a function.\n", eaAddress, pszName);
+			Output(FMT_EA_X" \"%s\" type found, but not a function.\n", eaAddress, pszName);
 			Output("   address not a function.\n");
 	}
 	
@@ -1077,7 +1090,7 @@ static void ScanDataSegment(segment_t *pRDataSeg)
 		if(pRDataSeg->perm & SEGPERM_EXEC)
 			szFlags[2] = 'E';
 
-		msg("Seg: \"%s\" %08X-%08X %08X, %s %s.\n", szName, pRDataSeg->startEA, pRDataSeg->endEA, pRDataSeg->size(), szFlags, szClass);
+		msg("Seg: \"%s\" "FMT_EA_X"-"FMT_EA_X" "FMT_EA_X", %s %s.\n", szName, pRDataSeg->startEA, pRDataSeg->endEA, pRDataSeg->size(), szFlags, szClass);
 	}
 	UINT uTotalStart = (uRTTI_VFTables + uRTCI_VFTables + uNamed_VFTables + uOther_VFTables);
 	
@@ -1097,8 +1110,8 @@ static void ScanDataSegment(segment_t *pRDataSeg)
 			/*
 			Output(" \n");
 			Output("----------------------------------------------------------\n");
-			Output("%08X .rdata.\n", eaRdataPtr);
-			Output("%08X .text\n",   eaRefAddr);			
+			Output(FMT_EA_X" .rdata.\n", eaRdataPtr);
+			Output(FMT_EA_X" .text\n",   eaRefAddr);			
 			*/
 
 			//Trace("UPD: %f\n", (Time - UpdateTime));
@@ -1166,7 +1179,7 @@ static BOOL TryVFTable(ea_t &reaRdataLoc)
 				// A valid RTTI "complete object locater" here?
 				if(RTTI::CompleteObjectLocator::IsValid((RTTI::CompleteObjectLocator *) eaAssumedCOL))
 				{		
-					Trace("%08X %03d ", tVftableInfo.eaStart, tVftableInfo.uMethods);				
+					Trace(FMT_EA_X" %03d ", tVftableInfo.eaStart, tVftableInfo.uMethods);				
 					RTTI::ProcessVftable(tVftableInfo.eaStart, tVftableInfo.eaEnd);		
 					uRTTI_VFTables++;
 					return(TRUE);
@@ -1176,7 +1189,7 @@ static BOOL TryVFTable(ea_t &reaRdataLoc)
 			// An RTCI type?
 			if(RTCI::IsValid(tVftableInfo.eaStart))
 			{			
-				Trace("%08X %03d ", tVftableInfo.eaStart, tVftableInfo.uMethods);			
+				Trace(FMT_EA_X" %03d ", tVftableInfo.eaStart, tVftableInfo.uMethods);			
 				RTCI::ProcessVftable(tVftableInfo.eaStart, tVftableInfo.eaEnd);
 				uRTCI_VFTables++;
 				return(TRUE);
@@ -1191,7 +1204,7 @@ static BOOL TryVFTable(ea_t &reaRdataLoc)
 				{					
 					char szName[MAXSTR] = {0};			
 					get_short_name(BADADDR, tVftableInfo.eaStart, szName, (MAXSTR - 1));			
-					Trace("%08X %03d %s  [User named]\n", tVftableInfo.eaStart, tVftableInfo.uMethods, tVftableInfo.szName);
+					Trace(FMT_EA_X" %03d %s  [User named]\n", tVftableInfo.eaStart, tVftableInfo.uMethods, tVftableInfo.szName);
 					AddTableEntry(ICON_NAMED, tVftableInfo.eaStart, tVftableInfo.uMethods, "%s  [User named]", tVftableInfo.szName);
 					uNamed_VFTables++;			
 					return(TRUE);
@@ -1201,7 +1214,7 @@ static BOOL TryVFTable(ea_t &reaRdataLoc)
 				uOther_VFTables++;
 				if(bLogAllVFTables)
 				{			
-					Trace("%08X %03d [Unknown]\n", tVftableInfo.eaStart, tVftableInfo.uMethods);
+					Trace(FMT_EA_X" %03d [Unknown]\n", tVftableInfo.eaStart, tVftableInfo.uMethods);
 					AddTableEntry(ICON_UNKNOWN, tVftableInfo.eaStart, tVftableInfo.uMethods, "[Unknown]");
 					return(TRUE);
 				}

@@ -17,14 +17,14 @@ namespace VFTABLE
 // Return TRUE, along with some vftable info if there is one at address
 BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 {
-	//Output(" Checking for vftable at: %08X\n", eaAddress);
+	Output(" Checking for vftable at: "FMT_EA_X"\n", eaAddress);
 
 	// Start of vftable should have a xref and a name (auto or manual)	
 	flags_t Flags = getFlags(eaAddress);  
 	if(!(hasRef(Flags) || has_any_name(Flags) && (isDwrd(Flags) || isUnknown(Flags))))
 	{
-		//Output(" Start of vftable should have a xref and a name (auto or manual)\n");
-		//Output(" Flags: %02X\n");
+		Output(" Start of vftable should have a xref and a name (auto or manual)\n");
+		Output(" Flags: %02X\n");
 		return(FALSE);
 	}
 	else
@@ -35,12 +35,12 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 		ea_t eaCodeRef = get_first_dref_to(eaAddress);
 		if(eaCodeRef && (eaCodeRef != BADADDR))
 		{
-			//Output(" \n");
-			//Output("%08X has xref(s) to code.\n", eaAddress);
+			Output(" \n");
+			Output(FMT_EA_X" has xref(s) to code.\n", eaAddress);
 
 			do 
 			{
-				//Output("    %08X\n", eaCodeRef);
+				Output("    "FMT_EA_X"\n", eaCodeRef);
 
 				// Will be code		
 				if(isCode(getFlags(eaCodeRef)))
@@ -50,18 +50,18 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 					LPCTSTR pszLine = GetDisasmText(eaCodeRef);
 					if((*((PUINT) pszLine) == 0x20766F6D /*"mov "*/) && (strstr(pszLine+4, " offset ") != NULL))
 					{
-						//Output("    %08X %08X OK \"%s\"\n", eaCodeRef, getFlags(eaCodeRef), pszLine);
+						Output("    "FMT_EA_X" "FMT_EA_X" OK \"%s\"\n", eaCodeRef, getFlags(eaCodeRef), pszLine);
 						bHasAMoveXref = TRUE;
 						break;
 					}
 					//else
-					//	Output("    %08X %08X NOT \"%s\"\n", eaCodeRef, getFlags(eaCodeRef), pszLine);
+					//	Output("    "FMT_EA_X" "FMT_EA_X" NOT \"%s\"\n", eaCodeRef, getFlags(eaCodeRef), pszLine);
 				}			
 				else			
 				// Else maybe problem a problem case, double check for a "mov" opcode
 				if(get_original_byte(eaCodeRef) == 0xC7 /*mov [xx], offset*/)
 				{
-					msg(" %08X ** Found alternate \"mov\" opcode here **\n", eaCodeRef);
+					msg(" "FMT_EA_X" ** Found alternate \"mov\" opcode here **\n", eaCodeRef);
 				}	
 				
 				eaCodeRef = get_next_dref_to(eaAddress, eaCodeRef);
@@ -70,7 +70,7 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 		}
 		if(!bHasAMoveXref)
 		{
-			//Output(" %08X ** No code ref has 'mov' instruction **\n");
+			Output(" "FMT_EA_X" ** No code ref has 'mov' instruction **\n");
 			return(FALSE);
 		}
 
@@ -81,10 +81,10 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 		// Typically "unk_xxxxxxxx"
 		if(get_name(BADADDR, eaAddress, rtInfo.szName, (MAXSTR - 1)))
 		{						
-			//Output(" Raw name: \"%s\".\n", rtInfo.szName);
+			Output(" Raw name: \"%s\".\n", rtInfo.szName);
 		}
 		else
-			msg(" %08X *** GetVftableInfo(): Failed to get raw name! ***\n", eaAddress);
+			msg(" "FMT_EA_X" *** GetVftableInfo(): Failed to get raw name! ***\n", eaAddress);
 		
 
 		//== Walk the table down to get it's size
@@ -93,11 +93,11 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 		{
 			// Should be DWORD offset to a function here (could be unknown if dirty IDB)
 			flags_t IndexFlags = getFlags(eaAddress);
-			//Output(" %08X -M- hasValue:%d, isData:%d, isOff0:%d, isDwrd:%d, isUnknown: %d\n", eaAddress, hasValue(IndexFlags), isData(IndexFlags), isOff0(IndexFlags), isDwrd(IndexFlags), isUnknown(IndexFlags));     
+			Output(" "FMT_EA_X" -M- hasValue:%d, isData:%d, isOff0:%d, isDwrd:%d, isUnknown: %d\n", eaAddress, hasValue(IndexFlags), isData(IndexFlags), isOff0(IndexFlags), isDwrd(IndexFlags), isUnknown(IndexFlags));     
 			//if(!(hasValue(IndexFlags) && isData(IndexFlags) && isOff0(IndexFlags) /*&& isDwrd(IndexFlags)*/))
 			if(!(hasValue(IndexFlags) && (isDwrd(IndexFlags) || isUnknown(IndexFlags))))
 			{
-				//Output(" ******* 1\n");
+				Output(" ******* 1\n");
 				break;
 			}
 
@@ -105,7 +105,7 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 			ea_t eaIndexValue = get_32bit(eaAddress);
 			if(!(eaIndexValue && (eaIndexValue != BADADDR)))
 			{
-				//Output(" ******* 2\n");
+				Output(" ******* 2\n");
 				break;
 			}
 
@@ -114,7 +114,7 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 			{
 				if(hasRef(IndexFlags))
 				{
-					//Output(" ******* 3\n");
+					Output(" ******* 3\n");
 					break;
 				}
 
@@ -127,10 +127,10 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 			// Yes most of the time it should be a function here, but it could be just a code block, or just a "missing function".
 			// Assume if the ref is just code, then it's all right.		
 			flags_t ValueFlags = getFlags(eaIndexValue);
-			//Output("   %08X -R- hasValue: %d, isCode: %d, isFunc: %d, *%08X\n", eaIndexValue, hasValue(ValueFlags), isCode(ValueFlags), isFunc(ValueFlags), get_32bit(eaIndexValue));
+			Output("   "FMT_EA_X" -R- hasValue: %d, isCode: %d, isFunc: %d, *"FMT_EA_X"\n", eaIndexValue, hasValue(ValueFlags), isCode(ValueFlags), isFunc(ValueFlags), get_32bit(eaIndexValue));
 			if(!isCode(ValueFlags))
 			{
-				//Output(" ******* 4\n");
+				Output(" ******* 4\n");
 				break;
 			}
 			else
@@ -146,13 +146,13 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 			if(add_func(eaIndexValue, BADADDR))
 			{				
 				// ** To much spam for large dirty IDBs
-				//msg("  %08X Fixed missing member function.\n", eaIndexValue);
+				//msg("  "FMT_EA_X" Fixed missing member function.\n", eaIndexValue);
 			}
 
 		
 			// Note: Not 100% accurate since the index could point to code, but not dissembled correctly					
 			// Value should be code and a function start
-			Output("   %08X hasValue: %d, isCode: %d, isFunc: %d, * %08X\n", eaIndexValue, hasValue(Flags), isCode(Flags), isFunc(Flags), get_32bit(eaIndexValue));
+			Output("   "FMT_EA_X" hasValue: %d, isCode: %d, isFunc: %d, * "FMT_EA_X"\n", eaIndexValue, hasValue(Flags), isCode(Flags), isFunc(Flags), get_32bit(eaIndexValue));
 			if(!isFunc(Flags))
 			{
 				Output(" ******* 4\n");
@@ -165,12 +165,12 @@ BOOL VFTABLE::GetTableInfo(ea_t eaAddress, tINFO &rtInfo)
 		if((rtInfo.uMethods = ((eaAddress - eaStart) / sizeof(PVOID))) > 0)
 		{
 			rtInfo.eaEnd = eaAddress;
-			//Output(" vftable: %08X-%08X, methods: %d\n", rtInfo.eaStart, rtInfo.eaEnd, rtInfo.uMethods);				
+			Output(" vftable: "FMT_EA_X"-"FMT_EA_X", methods: %d\n", rtInfo.eaStart, rtInfo.eaEnd, rtInfo.uMethods);				
 			return(TRUE);
 		}
 		else
 		{
-			//Output(" ******* 5\n");
+			Output(" ******* 5\n");
 			return(FALSE);
 		}
 	}
@@ -239,7 +239,7 @@ int VFTABLE::TryKnownMember(LPCTSTR lpszName, ea_t eaMember)
 				}
 			}
 			else
-				msg(" %08X ** Not code at this member! **\n", eaMember);
+				msg(" "FMT_EA_X" ** Not code at this member! **\n", eaMember);
 		}
 	}
 
@@ -250,7 +250,7 @@ int VFTABLE::TryKnownMember(LPCTSTR lpszName, ea_t eaMember)
 // Process vftable member functions
 void VFTABLE::ProcessMembers(LPCTSTR lpszName, ea_t eaStart, ea_t eaEnd)
 {
-	//Output(" %08X to %08X\n", eaStart, eaEnd);
+	Output(" "FMT_EA_X" to "FMT_EA_X"\n", eaStart, eaEnd);
 
 /*
 	TODO: On hold for now.
@@ -269,7 +269,7 @@ void VFTABLE::ProcessMembers(LPCTSTR lpszName, ea_t eaStart, ea_t eaEnd)
 			// Missing/bad code?
 			if(!get_func(eaMember))
 			{
-				//Output(" %08X ** No member function here! **\n", eaMember);				
+				Output(" "FMT_EA_X" ** No member function here! **\n", eaMember);				
 				ua_code(eaMember);				
 				add_func(eaMember, BADADDR);
 			}
@@ -277,7 +277,7 @@ void VFTABLE::ProcessMembers(LPCTSTR lpszName, ea_t eaStart, ea_t eaEnd)
 			TryKnownMember(lpszName, eaMember);
 		}
 		else
-			Output(" %08X ** Failed to read member pointer! **\n", eaAddress);
+			Output(" "FMT_EA_X" ** Failed to read member pointer! **\n", eaAddress);
 	
 		eaAddress += 4;
 	};

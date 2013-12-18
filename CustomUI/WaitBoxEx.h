@@ -53,7 +53,7 @@ public:
 		// Add a progress bar to it
 		if(s_hWndWaitBox)
 		{
-			//msg("Wait win: %08X %d\n", s_hWndWaitBox, s_bIsQt);
+			//msg("Wait win: "FMT_EA_X" %d\n", s_hWndWaitBox, s_bIsQt);
 			if(!s_bIsQtVer)
 			{
 				const UINT BARWIDTH = 230;
@@ -302,7 +302,7 @@ private:
 
 
 					//static int iStep = 0;
-					//printf("HWND: %04X, C: %04X, P: %08X, %d\n", lParam, uMsg, GetWinDat((HWND) lParam), iStep++);
+					//printf("HWND: %04X, C: %04X, P: "FMT_EA_X", %d\n", lParam, uMsg, GetWinDat((HWND) lParam), iStep++);
 					//PrintClassName(hWnd);
 					//PrintClassName((HWND) lParam);
 
@@ -333,7 +333,7 @@ private:
 				#endif
 			};
 
-			//Trace(" M: %04X, H: %08X\n", LOWORD(pwp->message), pwp->hwnd);
+			//Trace(" M: %04X, H: "FMT_EA_X"\n", LOWORD(pwp->message), pwp->hwnd);
 		}
 
 		return(::CallNextHookEx(s_hMsgHook, nCode, wParam, lParam));

@@ -48,3 +48,9 @@ template <class T> BOOL GetVerify32_t(ea_t eaPtr, T &rValue)
 
 	return(FALSE);
 }
+
+#ifdef __EA64__
+#define FMT_EA_X	"%016"FMT_EA"X"
+#else
+#define FMT_EA_X	"%08"FMT_EA"X"
+#endif

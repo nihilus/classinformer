@@ -171,9 +171,9 @@ static void idaapi SegBoxGetLineCB(PVOID pParm, ulong n, char* const *cell)
 			qsnprintf(cell[0], aWidth[0], "%s", szName);
 
 			// Extents
-			qsnprintf(cell[1], aWidth[1], "%08X", ptSeg->startEA);
-			qsnprintf(cell[2], aWidth[2], "%08X", ptSeg->endEA);
-			qsnprintf(cell[3], aWidth[3], "%08X", ptSeg->size());
+			qsnprintf(cell[1], aWidth[1], FMT_EA_X, ptSeg->startEA);
+			qsnprintf(cell[2], aWidth[2], FMT_EA_X, ptSeg->endEA);
+			qsnprintf(cell[3], aWidth[3], FMT_EA_X, ptSeg->size());
 
 			// Segment class name
 			char szClass[16];

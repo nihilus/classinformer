@@ -26,4 +26,3 @@ extern void AddTableEntry(int iIcon, ea_t eaVftable, asize_t uMethodCount, LPCTS
 extern void SetUnknown(ea_t ea, asize_t size);
 
 extern BOOL bAudioOnDone, bOverwriteComents, bPlaceStructs;
-
